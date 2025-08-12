@@ -1,10 +1,11 @@
 package adapters
 
 import (
-	"__template__/internal/ports"
 	"context"
 	"net"
 	"net/http"
+
+	"xmpp-llm-bridge/internal/ports"
 )
 
 type WebServer struct {
@@ -40,7 +41,7 @@ func (s *WebServer) Serve() error {
 		return err
 	}
 
-	s.logger.Info("server started", ports.Fields{"address": s.server.Addr})
+	s.logger.Info("web server started", ports.Fields{"address": s.server.Addr})
 
 	return s.server.Serve(l)
 }

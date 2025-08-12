@@ -4,32 +4,10 @@ application:
 http:
   listenAddr: ":8080"
 
+xmpp:
+  connectionTimeout: 10s
+
 logger:
-  level: info
+  level: debug
   timeKey: time
   format: logfmt
-
-middleware:
-  requestID: # RequestID middleware provides a way to set a unique request ID for each incoming HTTP request
-    header: "X-Request-ID"
-  logger: # Adds a logger to the context of each request, identifying requests with a unique request ID
-    requestIdKey: _correlation_id
-  requestLogger:
-    level: info
-    skip: ["/health"]
-  recover: # Recover middleware recovers from panics, logs the panic (and a backtrace), and returns a HTTP 500 (Internal Server Error) status if possible.
-    stackTrace: false
-  rateLimiter: # RateLimiter middleware provides a basic request rate limiting
-    requests: 10
-    duration: 1s
-    # skip: ["/health"]
-  timeout: # Timeout middleware provides a way to set a timeout value for requests
-    duration: 5s
-  cors: # CORS middleware provides Cross-Origin Resource Sharing
-    allowOrigins: ["*"]
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-    allowHeaders: ["Origin", "Authorization", "Content-Type"]
-    exposeHeaders: ["Content-Length"]
-    maxAge: 12h
-    allowCredentials: false
-    skip: ["/health"]

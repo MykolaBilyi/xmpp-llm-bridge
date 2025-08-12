@@ -1,8 +1,9 @@
 package providers
 
 import (
-	"__template__/internal/ports"
 	"context"
+
+	"xmpp-llm-bridge/internal/ports"
 
 	"github.com/google/uuid"
 )

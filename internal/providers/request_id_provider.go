@@ -1,9 +1,10 @@
 package providers
 
 import (
-	"__template__/internal/entities"
-	"__template__/pkg/providers"
 	"context"
+
+	"xmpp-llm-bridge/internal/entities"
+	"xmpp-llm-bridge/pkg/providers"
 )
 
 //go:generate mockgen -destination mocks/request_id_provider.go -package provider_mocks . RequestIdProvider

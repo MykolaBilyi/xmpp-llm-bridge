@@ -1,5 +1,5 @@
 {
-  "name": "__template__", // FIXME: Change this to the name of your project
+  "name": "xmpp-llm-bridge",
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",

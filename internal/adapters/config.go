@@ -1,7 +1,8 @@
 package adapters
 
 import (
-	"__template__/internal/ports"
+	"strings"
+	"xmpp-llm-bridge/internal/ports"
 
 	"github.com/spf13/viper"
 )
@@ -17,8 +18,10 @@ func NewConfig() (*Config, error) {
 	config := viper.New()
 	config.SetConfigType("yml")
 	config.SetConfigName("default")
-	config.AddConfigPath("../../configs/")
+	config.AddConfigPath("./configs")
 	config.AddConfigPath(".")
+	config.AutomaticEnv()
+	config.SetEnvKeyReplacer(strings.NewReplacer(`.`, `_`))
 
 	if err := config.ReadInConfig(); err != nil {
 		return nil, err

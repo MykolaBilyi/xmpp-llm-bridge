@@ -1,8 +1,9 @@
 package adapters
 
 import (
-	"__template__/internal/ports"
 	"context"
+
+	"xmpp-llm-bridge/internal/ports"
 
 	zaplogfmt "github.com/sykesm/zap-logfmt"
 	"go.uber.org/zap"

@@ -1,10 +1,11 @@
 package providers_test
 
 import (
-	"__template__/internal/adapters"
-	"__template__/internal/providers"
 	"context"
 	"testing"
+
+	"xmpp-llm-bridge/internal/adapters"
+	"xmpp-llm-bridge/internal/providers"
 
 	"github.com/stretchr/testify/assert"
 )

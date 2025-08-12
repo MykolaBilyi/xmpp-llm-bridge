@@ -1,6 +1,6 @@
 version: '3.9'
 services:
-  __service_name__: #FIXME change service name
+  bridge:
     build:
       context: .
       dockerfile: Dockerfile
