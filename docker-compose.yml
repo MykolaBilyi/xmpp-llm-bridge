@@ -1,0 +1,11 @@
+version: '3.9'
+services:
+  __service_name__: #FIXME change service name
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        DOCKER_BUILDKIT: 1
+        PORT: 8080
+    ports:
+      - 8080:8080
