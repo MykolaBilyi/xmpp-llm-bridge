@@ -29,11 +29,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	handler := client.NewHandler(config.Sub("llm"), logger)
+	llm, err := adapters.NewLLMClient(config.Sub("llm.api"), logger)
+	if err != nil {
+		logger.Error("error registering llm client", ports.Fields{"error": err})
+		os.Exit(1)
+	}
+	handler := client.NewHandler(config, llm, logger)
 	jabber, err := adapters.NewJabberClient(config.Sub("xmpp"), handler, logger)
 
 	if err != nil {
-		logger.Error("error registering client", ports.Fields{"error": err})
+		logger.Error("error registering xmpp client", ports.Fields{"error": err})
 		os.Exit(1)
 	}
 

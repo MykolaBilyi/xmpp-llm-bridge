@@ -10,11 +10,11 @@ import (
 	"mellium.im/xmpp/stanza"
 )
 
-func NewHandler(config ports.Config, logger ports.Logger) xmpp.Handler {
+func NewHandler(config ports.Config, llmclient ports.LLMClient, logger ports.Logger) xmpp.Handler {
 	// return handlers.NewDebugHandler(logger)
 	return mux.New(
 		stanza.NSClient,
-		mux.Message(stanza.ChatMessage, xml.Name{Local: "body"}, handlers.NewEchoMessageHandler(logger)),
+		mux.Message(stanza.ChatMessage, xml.Name{Local: "body"}, handlers.NewLlmMessageHandler(llmclient, logger)),
 		mux.Message(stanza.ChatMessage, xml.Name{Space: "http://jabber.org/protocol/chatstates"}, handlers.NewDebugHandler(logger)),
 	)
 }
