@@ -1,6 +1,7 @@
 package adapters
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -11,12 +12,13 @@ import (
 
 type Config struct {
 	*viper.Viper
+	ctx context.Context
 }
 
 var _ ports.Config = &Config{}
 
 // New returns a new config instance.
-func NewConfig() (*Config, error) {
+func NewConfig(ctx context.Context) (*Config, error) {
 	if err := loadEnvFiles(); err != nil {
 		return nil, fmt.Errorf("error loading env files: %w", err)
 	}
@@ -32,7 +34,7 @@ func NewConfig() (*Config, error) {
 		return nil, err
 	}
 
-	return &Config{config}, nil
+	return &Config{config, ctx}, nil
 }
 
 func loadEnvFiles() error {
@@ -72,18 +74,7 @@ func loadEnvFiles() error {
 func (c Config) Sub(key string) ports.Config {
 	sub := c.Viper.Sub(key)
 	if sub == nil {
-		return &Config{viper.New()}
+		return &Config{viper.New(), c.ctx}
 	}
-	return &Config{sub}
-}
-
-func NewTestConfig(configs ...map[string]any) ports.Config {
-	v := viper.New()
-	for _, c := range configs {
-		err := v.MergeConfigMap(c)
-		if err != nil {
-			panic(err)
-		}
-	}
-	return &Config{v}
+	return &Config{sub, c.ctx}
 }

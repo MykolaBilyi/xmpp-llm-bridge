@@ -3,10 +3,13 @@ package adapters
 import (
 	"context"
 	"crypto/tls"
+	"encoding/xml"
 	"errors"
 	"fmt"
 
 	"xmpp-llm-bridge/internal/ports"
+	"xmpp-llm-bridge/internal/providers"
+	myxmpp "xmpp-llm-bridge/pkg/xmpp"
 
 	"mellium.im/sasl"
 	"mellium.im/xmpp"
@@ -17,90 +20,97 @@ import (
 )
 
 type JabberClient struct {
-	baseCtx       context.Context
-	cancelContext context.CancelFunc
-	cfg           ports.Config
-	logger        ports.Logger
-	server        string
-	jid           jid.JID
-	session       *xmpp.Session
-	handler       xmpp.Handler
+	config         ports.Config
+	loggerProvider *providers.LoggerProvider
+	server         string
+	jid            jid.JID
+	session        *xmpp.Session
 }
 
-var _ ports.Server = (*JabberClient)(nil)
+var _ ports.XMPPSession = (*JabberClient)(nil)
 
-func NewJabberClient(cfg ports.Config, handler xmpp.Handler, logger ports.Logger) (*JabberClient, error) {
-	cfg.SetDefault("connectionTimeout", "10s")
-	cfg.SetDefault("lang", "en")
+func NewJabberClient(ctx context.Context, config ports.Config, loggerProvider *providers.LoggerProvider) (*JabberClient, error) {
+	config.SetDefault("connectionTimeout", "10s")
+	config.SetDefault("lang", "en")
 
-	address := cfg.GetString("jid")
+	address := config.GetString("jid")
 	j, err := jid.Parse(address)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing address %q: %w", address, err)
 	}
 
-	baseCtx, cancel := context.WithCancel(context.Background())
-
 	return &JabberClient{
-		cfg:           cfg,
-		baseCtx:       baseCtx,
-		cancelContext: cancel,
-		logger:        logger,
-		jid:           j,
-		server:        j.Domainpart(),
-		handler:       handler,
+		config:         config,
+		loggerProvider: loggerProvider,
+		jid:            j,
+		server:         j.Domainpart(),
 	}, nil
 }
 
 func (j *JabberClient) streamConfig(*xmpp.Session, *xmpp.StreamConfig) xmpp.StreamConfig {
 	return xmpp.StreamConfig{
-		Lang: j.cfg.GetString("lang"),
+		Lang: j.config.GetString("lang"),
 		Features: []xmpp.StreamFeature{
 			xmpp.BindResource(),
 			xmpp.StartTLS(&tls.Config{
 				ServerName: j.server,
 				MinVersion: tls.VersionTLS12,
 			}),
-			xmpp.SASL("", j.cfg.GetString("password"), sasl.ScramSha1Plus, sasl.ScramSha1, sasl.Plain),
+			xmpp.SASL("", j.config.GetString("password"), sasl.ScramSha1Plus, sasl.ScramSha1, sasl.Plain),
 		},
 	}
 }
 
-func (j *JabberClient) Serve() error {
+func (j *JabberClient) Connect(ctx context.Context) error {
+	logger := j.loggerProvider.Value(ctx)
+
 	d := dial.Dialer{}
-	j.logger.Debug("connecting", ports.Fields{"host": j.server})
-	dialCtx, dialCtxCancel := context.WithTimeout(j.baseCtx, j.cfg.GetDuration("connectionTimeout"))
+	logger.Debug("connecting", ports.Fields{"host": j.server})
+	dialCtx, dialCtxCancel := context.WithTimeout(ctx, j.config.GetDuration("connectionTimeout"))
 	connection, err := d.DialServer(dialCtx, "tcp", j.jid, j.server)
 	if err != nil {
 		dialCtxCancel()
 		return fmt.Errorf("error dialing session: %w", err)
 	}
-	j.logger.Debug("logging in", ports.Fields{"jid": j.jid.String()})
-	j.session, err = xmpp.NewSession(j.baseCtx, j.jid.Domain(), j.jid, connection, 0, xmpp.NewNegotiator(j.streamConfig))
+
+	logger.Debug("logging in", ports.Fields{"jid": j.jid.String()})
+	j.session, err = xmpp.NewSession(ctx, j.jid.Domain(), j.jid, connection, 0, xmpp.NewNegotiator(j.streamConfig))
 	dialCtxCancel()
 	if err != nil {
 		if errors.Is(err, stream.SeeOtherHost) {
 			j.server = err.(stream.Error).Content
 
-			j.logger.Info("see-other-host", ports.Fields{"host": j.server})
+			logger.Info("see-other-host", ports.Fields{"host": j.server})
 			j.session.Close()
 			connection.Close()
-			return j.Serve()
+			return j.Connect(ctx)
 		}
 		return fmt.Errorf("error establishing a session: %w", err)
 	}
-	j.logger.Info("connected to server", ports.Fields{"host": j.server, "jid": j.jid.String()})
+	logger.Info("connected to server", ports.Fields{"host": j.server, "jid": j.jid.String()})
 
-	err = j.session.Send(j.baseCtx, stanza.Presence{Type: stanza.AvailablePresence}.Wrap(nil))
+	return nil
+}
+
+func (j *JabberClient) Handle(ctx context.Context, handler myxmpp.Handler) error {
+	err := j.session.Send(ctx, stanza.Presence{Type: stanza.AvailablePresence}.Wrap(nil))
 	if err != nil {
 		return fmt.Errorf("Error sending initial presence: %w", err)
 	}
 
-	return j.session.Serve(j.handler)
+	return j.session.Serve(myxmpp.HandleWithContext(ctx, handler))
 }
 
-func (j *JabberClient) Shutdown(ctx context.Context) error {
-	j.cancelContext()
+func (j *JabberClient) Send(ctx context.Context, stanza xml.TokenReader) error {
+	err := j.session.Send(ctx, stanza)
+	if err != nil {
+		return fmt.Errorf("error sending message: %w", err)
+	}
+
+	return nil
+}
+
+func (j *JabberClient) Close(ctx context.Context) error {
 	if j.session == nil {
 		return nil
 	}

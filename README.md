@@ -25,5 +25,9 @@ Environment: TAG=dev
 Requires: build-image
 
 ```sh
-docker run --rm --name xmpp-llm-bridge-dev -e XMPP_JID=$XMPP_JID -e XMPP_PASSWORD=$XMPP_PASSWORD -p 8080:8080 ghcr.io/mykolabilyi/xmpp-llm-bridge:$TAG
+docker run --rm --name xmpp-llm-bridge-dev \
+    -e XMPP_JID=$XMPP_JID \
+    -e XMPP_PASSWORD=$XMPP_PASSWORD \
+    -p 8080:8080 \
+    ghcr.io/mykolabilyi/xmpp-llm-bridge:$TAG
 ```

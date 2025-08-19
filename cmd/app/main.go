@@ -2,14 +2,10 @@ package main
 
 import (
 	"context"
-	"errors"
-	"net/http"
 	"syscall"
 
-	"xmpp-llm-bridge/api/client"
-	"xmpp-llm-bridge/api/server"
 	"xmpp-llm-bridge/internal/adapters"
-	"xmpp-llm-bridge/internal/ports"
+	"xmpp-llm-bridge/internal/app"
 
 	"log"
 	"os"
@@ -17,84 +13,54 @@ import (
 )
 
 func main() {
-	config, err := adapters.NewConfig()
+	ctx := context.Background()
+
+	appConfig, err := adapters.NewConfig(ctx)
 	if err != nil {
 		log.Printf("error reading config: %v\n", err)
 		os.Exit(1)
 	}
 
-	logger, err := adapters.NewLogger(config.Sub("logger"))
-	if err != nil {
-		log.Printf("error creating logger: %v\n", err)
-		os.Exit(1)
-	}
-
-	llm, err := adapters.NewLLMClient(config.Sub("llm.api"), logger)
-	if err != nil {
-		logger.Error("error registering llm client", ports.Fields{"error": err})
-		os.Exit(1)
-	}
-	handler := client.NewHandler(config, llm, logger)
-	jabber, err := adapters.NewJabberClient(config.Sub("xmpp"), handler, logger)
-
-	if err != nil {
-		logger.Error("error registering xmpp client", ports.Fields{"error": err})
-		os.Exit(1)
-	}
-
-	go func() {
-		if err := jabber.Serve(); err != nil {
-			logger.Error("xmpp client error", ports.Fields{"error": err})
-			os.Exit(1)
-		}
-	}()
-
-	router := server.NewRouter(config.Sub("middleware"), logger)
-	server := adapters.NewWebServer(config.Sub("http"), router, logger)
-
-	go func() {
-		if err := server.Serve(); err != nil {
-			if errors.Is(err, http.ErrServerClosed) {
-				return
-			}
-			logger.Error("web server error", ports.Fields{"error": err})
-			os.Exit(1)
-		}
-	}()
-
-	signalChan := make(chan os.Signal, 1)
-
-	signal.Notify(
-		signalChan,
-		syscall.SIGTERM,
-		syscall.SIGINT,
+	application, err := app.NewApplication(
+		ctx,
+		appConfig,
 	)
-
-	<-signalChan
-	logger.Info("shutting down")
-
-	go func() {
-		<-signalChan
-		// second signal. Exit directly.
-		logger.Warn("terminating")
+	if err != nil {
+		log.Printf("error initialization application: %v\n", err)
 		os.Exit(1)
-	}()
-
-	// graceful shutdown
-	gracefulCtx, cancelShutdown := context.WithTimeout(context.Background(), config.GetDuration("application.shutdownTimeout"))
-	defer cancelShutdown() // release resources afterwards
-
-	if err := jabber.Shutdown(gracefulCtx); err != nil {
-		logger.Error("shutdown error", ports.Fields{"error": err})
-		defer os.Exit(1)
-		return
 	}
 
-	if err := server.Shutdown(gracefulCtx); err != nil {
-		logger.Error("shutdown error", ports.Fields{"error": err})
-		defer os.Exit(1)
-		return
+	err = application.Start(ctx)
+	if err != nil {
+		log.Printf("error starting application: %v\n", err)
+		os.Exit(1)
 	}
 
-	defer os.Exit(0)
+	stopCh, closeCh := createChannel()
+	defer closeCh()
+
+	<-stopCh
+	go terminateOnSecondSignal(stopCh)
+
+	err = application.Stop(ctx)
+	if err != nil {
+		log.Printf("error during shutdown: %v\n", err)
+		os.Exit(1)
+	}
+
+	os.Exit(0)
+}
+
+func createChannel() (chan os.Signal, func()) {
+	stopCh := make(chan os.Signal, 1)
+	signal.Notify(stopCh, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+
+	return stopCh, func() {
+		close(stopCh)
+	}
+}
+
+func terminateOnSecondSignal(stopCh chan os.Signal) {
+	<-stopCh
+	os.Exit(1)
 }

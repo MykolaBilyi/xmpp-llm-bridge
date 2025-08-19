@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-type LLMClient interface {
+type LLMService interface {
 	GetChatCompletion(ctx context.Context, req ChatCompletionRequest) (ChatCompletionResponse, error)
 }
 

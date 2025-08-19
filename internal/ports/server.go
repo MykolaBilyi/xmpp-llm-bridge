@@ -3,6 +3,6 @@ package ports
 import "context"
 
 type Server interface {
-	Serve() error
+	Serve(context.Context) error
 	Shutdown(context.Context) error
 }

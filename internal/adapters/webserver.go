@@ -6,47 +6,43 @@ import (
 	"net/http"
 
 	"xmpp-llm-bridge/internal/ports"
+	"xmpp-llm-bridge/internal/providers"
 )
 
 type WebServer struct {
-	baseCtx       context.Context
-	cancelContext context.CancelFunc
-	cfg           ports.Config
-	logger        ports.Logger
-	server        *http.Server
+	config         ports.Config
+	loggerProvider *providers.LoggerProvider
+	server         *http.Server
 }
 
 var _ ports.Server = (*WebServer)(nil)
 
-func NewWebServer(cfg ports.Config, router http.Handler, logger ports.Logger) *WebServer {
-	cfg.SetDefault("listenAddr", ":8080")
-	baseCtx, cancel := context.WithCancel(context.Background())
+func NewWebServer(ctx context.Context, config ports.Config, loggerProvider *providers.LoggerProvider, handler http.Handler) (*WebServer, error) {
+	config.SetDefault("listenAddr", ":8080")
 
 	return &WebServer{
-		cfg:           cfg,
-		baseCtx:       baseCtx,
-		cancelContext: cancel,
-		logger:        logger,
+		config:         config,
+		loggerProvider: loggerProvider,
 		server: &http.Server{
-			Addr:        cfg.GetString("listenAddr"),
-			Handler:     router,
-			BaseContext: func(_ net.Listener) context.Context { return baseCtx },
+			Addr:        config.GetString("listenAddr"),
+			Handler:     handler,
+			BaseContext: func(_ net.Listener) context.Context { return ctx },
 		},
-	}
+	}, nil
 }
 
-func (s *WebServer) Serve() error {
+func (s *WebServer) Serve(ctx context.Context) error {
+	logger := s.loggerProvider.Value(ctx)
 	l, err := net.Listen("tcp", s.server.Addr)
 	if err != nil {
 		return err
 	}
 
-	s.logger.Info("web server started", ports.Fields{"address": s.server.Addr})
+	logger.Info("web server started", ports.Fields{"address": s.server.Addr})
 
 	return s.server.Serve(l)
 }
 
 func (s *WebServer) Shutdown(ctx context.Context) error {
-	s.cancelContext()
 	return s.server.Shutdown(ctx)
 }
