@@ -57,7 +57,7 @@ func (h *EchoHandler) HandleXMPP(ctx context.Context, t xmlstream.TokenReadEncod
 		Body: msg.Body,
 	}
 
-	logger.Debug("Replying to message", ports.Fields{"id": msg.ID, "to": reply.To, "body": reply.Body})
+	logger.Debug("echo", ports.Fields{"to": reply.To, "body": reply.Body})
 
 	// TODO DRY sending logic
 	xmlBytes, _ := xml.Marshal(reply)

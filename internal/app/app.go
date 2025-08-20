@@ -59,8 +59,8 @@ func (a *Application) Start(ctx context.Context) error {
 	errChan := make(chan error, 2)
 
 	loggerProvider := providers.NewLoggerProvider(a.logger)
-	ctx = loggerProvider.WithLogger(ctx, a.logger)
-	xmppHandler := client.NewHandler(a.config, loggerProvider, a.jabber, a.client)
+	requestIdProvider := providers.NewRequestIdProvider()
+	xmppHandler := client.NewHandler(a.config, loggerProvider, requestIdProvider, a.jabber, a.client)
 
 	go func() {
 		if err := a.jabber.Handle(ctx, xmppHandler); err != nil {

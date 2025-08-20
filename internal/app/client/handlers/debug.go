@@ -51,8 +51,8 @@ func (h *DebugHandler) HandleXMPP(ctx context.Context, t xmlstream.TokenReadEnco
 		return false, err
 	}
 
-	logger.Debug("Received stanza", ports.Fields{
-		"name":    start.Name.Local,
+	logger.Debug("incoming", ports.Fields{
+		"stanza":  start.Name.Local,
 		"content": str,
 	})
 

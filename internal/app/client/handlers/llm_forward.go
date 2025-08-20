@@ -47,7 +47,7 @@ func (h *LlmForwardHandler) HandleXMPP(ctx context.Context, t xmlstream.TokenRea
 		logger.Error("error decoding message", ports.Fields{"error": err})
 		return false, err
 	}
-	logger.Debug("received message", ports.Fields{"id": msg.ID, "from": msg.From.String(), "body": msg.Body})
+	logger.Debug("incoming message", ports.Fields{"from": msg.From.String(), "body": msg.Body})
 
 	if msg.Body == "" {
 		return false, nil
@@ -81,13 +81,13 @@ func (h *LlmForwardHandler) askLLM(ctx context.Context, msg entities.MessageBody
 		},
 		Body: string(response),
 	}
-	logger.Debug("replying to message", ports.Fields{"id": msg.ID, "body": reply.Body})
+	logger.Debug("llm reply", ports.Fields{"body": reply.Body})
 
 	// TODO DRY sending logic
 	xmlBytes, _ := xml.Marshal(reply)
 	reader := bytes.NewReader(xmlBytes)
 	err = h.session.Send(ctx, xml.NewDecoder(reader))
 	if err != nil {
-		logger.Error("error sending reply", ports.Fields{"error": err, "id": msg.ID})
+		logger.Error("error sending reply", ports.Fields{"error": err})
 	}
 }
