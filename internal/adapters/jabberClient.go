@@ -1,6 +1,7 @@
 package adapters
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/xml"
@@ -101,10 +102,16 @@ func (j *JabberClient) Handle(ctx context.Context, handler myxmpp.Handler) error
 	return j.session.Serve(myxmpp.HandleWithContext(ctx, handler))
 }
 
-func (j *JabberClient) Send(ctx context.Context, stanza xml.TokenReader) error {
-	err := j.session.Send(ctx, stanza)
+func (j *JabberClient) Send(ctx context.Context, s myxmpp.Stanza) error {
+	xmlBytes, err := xml.Marshal(s.Get())
 	if err != nil {
-		return fmt.Errorf("error sending message: %w", err)
+		return fmt.Errorf("error marshalling stanza: %w", err)
+	}
+	reader := bytes.NewReader(xmlBytes)
+
+	err = j.session.Send(ctx, xml.NewDecoder(reader))
+	if err != nil {
+		return fmt.Errorf("error sending stanza: %w", err)
 	}
 
 	return nil

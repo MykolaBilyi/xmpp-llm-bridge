@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"bytes"
 	"context"
 	"encoding/xml"
 	"io"
@@ -59,8 +58,5 @@ func (h *EchoHandler) HandleXMPP(ctx context.Context, t xmlstream.TokenReadEncod
 
 	logger.Debug("echo", ports.Fields{"to": reply.To, "body": reply.Body})
 
-	// TODO DRY sending logic
-	xmlBytes, _ := xml.Marshal(reply)
-	reader := bytes.NewReader(xmlBytes)
-	return true, h.session.Send(ctx, xml.NewDecoder(reader))
+	return true, h.session.Send(ctx, xmpp.Message(reply))
 }

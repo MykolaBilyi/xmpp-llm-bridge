@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"bytes"
 	"context"
 	"encoding/xml"
 	"io"
@@ -54,14 +53,11 @@ func (h *LlmForwardHandler) HandleXMPP(ctx context.Context, t xmlstream.TokenRea
 	}
 	go h.askLLM(ctx, msg)
 
-	// TODO DRY sending logic
-	xmlBytes, _ := xml.Marshal(entities.ComposingMessage{
+	return true, h.session.Send(ctx, xmpp.Message(entities.ComposingMessage{
 		Message: stanza.Message{
 			To: msg.From,
 		},
-	})
-	reader := bytes.NewReader(xmlBytes)
-	return true, h.session.Send(ctx, xml.NewDecoder(reader))
+	}))
 }
 
 func (h *LlmForwardHandler) askLLM(ctx context.Context, msg entities.MessageBody) {
@@ -83,10 +79,7 @@ func (h *LlmForwardHandler) askLLM(ctx context.Context, msg entities.MessageBody
 	}
 	logger.Debug("llm reply", ports.Fields{"body": reply.Body})
 
-	// TODO DRY sending logic
-	xmlBytes, _ := xml.Marshal(reply)
-	reader := bytes.NewReader(xmlBytes)
-	err = h.session.Send(ctx, xml.NewDecoder(reader))
+	err = h.session.Send(ctx, xmpp.Message(reply))
 	if err != nil {
 		logger.Error("error sending reply", ports.Fields{"error": err})
 	}

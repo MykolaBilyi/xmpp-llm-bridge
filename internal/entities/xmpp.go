@@ -27,13 +27,3 @@ type ChatStateActive struct {
 type ChatStateComposing struct {
 	XMLName xml.Name `xml:"http://jabber.org/protocol/chatstates composing"`
 }
-
-type XMPPStanza struct {
-	Message  XMPPMessage
-	Presense XMPPPresense
-	IQ       XMPPIQ
-}
-
-type XMPPMessage string
-type XMPPPresense string
-type XMPPIQ string
