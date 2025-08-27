@@ -1,28 +1,15 @@
 {
   "name": "xmpp-llm-bridge",
-  "dockerComposeFile": "docker-compose.yml",
-  "service": "app",
+  "image": "mcr.microsoft.com/devcontainers/go:1-1.23-bookworm",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "forwardPorts": [
-    // "db:5432",
     8080
   ],
   "containerEnv": {
     "ENV": "dev"
   },
-  // "postCreateCommand": "go mod tidy",
-  "features": {
-    "ghcr.io/devcontainers/features/common-utils:2": {
-      "installZsh": "true",
-      "username": "vscode",
-      "userUid": "1000",
-      "userGid": "1000",
-      "upgradePackages": "true"
-    },
-    "ghcr.io/devcontainers/features/go:1": {
-      "version": "none"
-    }
-  },
+  "postCreateCommand": "cd ${containerWorkspaceFolder}; /usr/bin/env sh .devcontainer/postCreateCommand.sh",
+  "features": {},
   "customizations": {
     "vscode": {
       "settings": {
@@ -36,6 +23,5 @@
       ]
     }
   },
-  // Set `remoteUser` to `root` to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
   "remoteUser": "vscode"
 }
