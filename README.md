@@ -80,28 +80,23 @@ The application runs two concurrent services:
 go run cmd/app/main.go
 ```
 
-### build-image
+### image-build
 
 run: once
 Inputs: TAG
 Environment: TAG=dev
 
 ```sh
-docker build -t ghcr.io/mykolabilyi/xmpp-llm-bridge:$TAG .
+docker compose build
 ```
 
-### run-image
+### image-run
 
 Inputs: TAG
 Environment: TAG=dev
-Requires: build-image
 
 ```sh
-docker run --rm --name xmpp-llm-bridge-dev \
-    -e XMPP_JID=$XMPP_JID \
-    -e XMPP_PASSWORD=$XMPP_PASSWORD \
-    -p 8080:8080 \
-    ghcr.io/mykolabilyi/xmpp-llm-bridge:$TAG
+docker compose up
 ```
 
 [xc]: https://xcfile.dev/
