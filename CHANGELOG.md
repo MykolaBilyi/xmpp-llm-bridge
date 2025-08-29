@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2025-08-29
+
 ### Changed
 
 - Github Actions workflow for automated release builds and Docker image publishing, now uses CHANGELOG.md for release notes
@@ -54,7 +56,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic project structure with hexagonal architecture foundations
 - GitHub Actions workflow for automated release builds and Docker image publishing
 
-[unreleased]: https://github.com/MykolaBilyi/xmpp-llm-bridge/compare/v0.1.2...HEAD
+[unreleased]: https://github.com/MykolaBilyi/xmpp-llm-bridge/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/MykolaBilyi/xmpp-llm-bridge/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/MykolaBilyi/xmpp-llm-bridge/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/MykolaBilyi/xmpp-llm-bridge/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/MykolaBilyi/xmpp-llm-bridge/releases/tag/v0.1.0
