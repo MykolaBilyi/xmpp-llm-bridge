@@ -8,7 +8,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/openai/openai-go/v2 v2.0.2
 	github.com/spf13/viper v1.20.1
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	github.com/sykesm/zap-logfmt v0.0.4
 	go.uber.org/mock v0.5.2
 	go.uber.org/zap v1.27.0
