@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- CHANGELOG.md file
+- Added project description in README.md
+- Added CHANGELOG.md file
 - devcontainer config
 - Dependabot config
 
