@@ -1,11 +1,14 @@
-version: '3.9'
 services:
   bridge:
+    image: ghcr.io/mykolabilyi/xmpp-llm-bridge:${TAG:-dev}
     build:
       context: .
       dockerfile: Dockerfile
       args:
         DOCKER_BUILDKIT: 1
-        PORT: 8080
+    environment:
+      - XMPP_JID=${XMPP_JID:?}
+      - XMPP_PASSWORD=${XMPP_PASSWORD:?}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:?}
     ports:
       - 8080:8080
