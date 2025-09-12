@@ -1,0 +1,155 @@
+name: Tag New Release
+
+on: 
+  workflow_dispatch:
+    inputs:
+      # optional, will be determined from git history if not provided
+      version:
+        type: string
+        description: 'Release version (optional)'
+        required: false
+
+env:
+  BRANCH: main
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      number: ${{ steps.version.outputs.result }}
+    steps:
+    - uses: actions/setup-node@v5
+    - run: npm install semver@v7
+    - uses: actions/github-script@v8
+      if: inputs.version != ''
+      id: validate
+      env:
+        VERSION: ${{ inputs.version }}
+      with:
+        result-encoding: string
+        script: |
+          const { VERSION } = process.env;
+          const validate = require('semver/functions/valid');
+          const version = validate(VERSION);
+          if (!version) {
+            return core.setFailed(`Version ${VERSION} is not valid semver`);
+          }
+          return version
+    - uses: ietf-tools/semver-action@v1
+      if: steps.validate.outputs.result == ''
+      id: determine
+      with:
+        token: ${{ github.token }}
+        branch: ${{ env.BRANCH }}
+        fallbackTag: 0.0.0
+        noVersionBumpBehavior: patch
+    - uses: actions/github-script@v8
+      id: version
+      env:
+        VERSION: ${{ steps.validate.outputs.result || steps.determine.outputs.nextStrict }}
+      with:
+        result-encoding: string
+        script: |
+          const gt = require('semver/functions/gt');
+          const { VERSION } = process.env;
+          const { data: { tag_name: latest } } = await github.rest.repos.getLatestRelease({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+          });
+          if (latest && !gt(VERSION, latest.replace(/^v/, ''))) {
+            return core.setFailed(`Version ${VERSION} is not greater than latest release ${latest}`);
+          }
+          core.notice(`Releasing version ${VERSION}`);
+          return VERSION
+
+  release-notes:
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.version.outputs.number }}
+    outputs:
+      commit-id: ${{ steps.commit.outputs.commit-sha }}
+    needs: version
+    steps:
+    - uses: actions/checkout@v5
+    - uses: actions/github-script@v8
+      with:
+        script: |
+          const { VERSION } = process.env;
+          const content = require('fs').readFileSync('CHANGELOG.md', 'utf8');
+          const unreleasedHeaderRE = /(?<level>#+)\s+\[Unreleased\]/i
+          const unreleasedHeaderValue = unreleasedHeaderRE.exec(content);
+          if (!unreleasedHeaderValue) {
+            return core.setFailed('CHANGELOG.md does not contain [Unreleased] section');
+          }
+          const sectionLevel = unreleasedHeaderValue.groups.level.length;
+          if (sectionHeaderRE(sectionLevel, VERSION).test(content)) {
+            return core.setFailed(`CHANGELOG.md already contains section for version ${VERSION}`);
+          }
+          const unreleasedSection = content.split(unreleasedHeaderRE)[unreleasedHeaderValue.length].split(sectionHeaderRE(sectionLevel))[0];
+          if (!unreleasedSection.replace(/\s+/g, '')) {
+            return core.setFailed('[Unreleased] section is empty, nothing to release');
+          }
+          const updatedContent = content.replace(unreleasedHeaderRE, sectionHeader(sectionLevel, VERSION))
+            .replace(/\[Unreleased\]:\s*https:\/\/github\.com\/(.*?)\/(.*?)\/compare\/v([0-9]+\.[0-9]+\.[0-9]+)\.\.\.HEAD/i,
+            `[Unreleased]: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/compare/v${VERSION}...HEAD
+          [${VERSION}]: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/compare/v$3...v${VERSION}`);
+
+          require('fs').writeFileSync('CHANGELOG.md', updatedContent);
+          function sectionHeaderRE(level, version = '[0-9]+.[0-9]+.[0-9]+') {
+            return new RegExp(`#{${level}}\\s+\\[${version.replace(/\./g, '\\.')}\\]`, 'i');
+          }
+          function sectionHeader(level, version) {
+            const date = new Date().toISOString().split('T')[0];
+            return `${'#'.repeat(level)} [${version}] - ${date}`;
+          }
+
+    - run: git diff CHANGELOG.md
+    - id: commit
+      uses: swinton/commit@v2.x
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        files: CHANGELOG.md
+        commit-message: Release version ${{ env.VERSION }}
+
+  git-tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: 
+    - version
+    - release-notes
+    env:
+      VERSION: ${{ needs.version.outputs.number }}
+      COMMIT_ID: ${{ needs.release-notes.outputs.commit-id }}
+    steps:
+    - uses: actions/github-script@v8
+      with:
+        script: |
+          const { VERSION, COMMIT_ID } = process.env;      
+          github.rest.git.createRef({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            ref: `refs/tags/v${VERSION}`,
+            sha: COMMIT_ID
+          })
+
+  draft-release:
+    runs-on: ubuntu-latest
+    needs:
+    - version
+    - release-notes
+    env:
+      VERSION: ${{ needs.version.outputs.number }}
+    steps:
+    - uses: actions/github-script@v8
+      with:
+        script: |
+          const { VERSION: version } = process.env;      
+          github.rest.actions.createWorkflowDispatch({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            ref: `refs/tags/v${version}`,
+            workflow_id: 'draft-release.yml',
+            inputs: { version }
+          })

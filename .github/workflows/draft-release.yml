@@ -1,0 +1,88 @@
+name: Create Release Draft
+run-name: Draft Release ${{ inputs.version || github.ref_name }}
+
+on: 
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        type: string
+        description: Release version, without leading "v"
+        required: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.script.outputs.version }}
+      releaseId: ${{ steps.script.outputs.releaseId }}
+    steps:
+    - uses: actions/setup-node@v5
+      with:
+        node-version: '24' # github-script@v8 uses node 24
+    - run: npm install semver
+    - uses: actions/github-script@v8
+      id: script
+      env:
+        VERSION: ${{ inputs.version || github.ref_name }}
+      with:
+        result-encoding: string
+        script: |
+          const validate = require('semver/functions/valid');
+          const version = validate(process.env.VERSION);
+          if (!version) {
+            core.setFailed(`Version ${process.env.VERSION} is not valid semver`);
+          }
+          core.setOutput('version', version);
+          const { data } = await github.rest.repos.listReleases({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+          });
+          data.forEach(({ name, tag_name }) => name !== tag_name && core.warning(`Release name and tag mismatch: ${name} != ${tag_name}`))
+          // TODO check if version is greater than latest release
+          const releases = data.reduce((acc, { id, name, draft }) => Object.assign(acc, { [name.replace(/^v/, '')]: { id, name, draft } }), {});
+          if (releases[version]) {
+            if (!releases[version].draft) {
+              return core.setFailed(`Release ${version} already exists and is published`);
+            }
+            core.setOutput('releaseId', releases[version].id);
+            core.warning(`Release ${version} already exists as draft, will be updated`);
+          }
+
+  draft:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: validate
+    steps:
+    - uses: actions/checkout@v5
+    - run: echo > RELEASE_HEAD.md
+    - uses: CSchoel/release-notes-from-changelog@v1
+      with:
+        version: ${{ needs.validate.outputs.version }}
+    - uses: actions/github-script@v8
+      env:
+        VERSION: ${{ needs.validate.outputs.version }}
+        RELEASE_ID: ${{ needs.validate.outputs.releaseId }}
+      with:
+        script: |
+          const fs = require('fs');
+          const notes = fs.readFileSync('RELEASE.md', 'utf8');
+          const releaseInfo = {
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            tag_name: `v${process.env.VERSION}`,
+            name: `v${process.env.VERSION}`,
+            body: notes,
+            draft: true,
+            prerelease: false,
+          }
+          if (process.env.RELEASE_ID) {
+            await github.rest.repos.updateRelease(Object.assign(releaseInfo, { release_id: parseInt(process.env.RELEASE_ID, 10) }));
+            core.notice(`Updated existing draft release ${process.env.VERSION}`);
+            return;
+          }
+          await github.rest.repos.createRelease(releaseInfo);
+          fs.unlinkSync('RELEASE.md');
