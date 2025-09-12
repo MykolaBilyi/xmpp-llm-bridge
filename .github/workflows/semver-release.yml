@@ -1,0 +1,112 @@
+name: Release unreleased
+
+on: 
+  workflow_dispatch:
+    inputs:
+      # optional, will be determined from git history if not provided
+      version:
+        type: string
+        description: 'Release version (optional)'
+        required: false
+
+env:
+  BRANCH: main
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      number: ${{ steps.validate.output.result || steps.determine.outputs.nextStrict }}
+    steps:
+    - uses: actions/setup-node@v5
+    - run: npm install semver@v7
+    - uses: actions/github-script@v8
+      if: inputs.version != ''
+      id: validate
+      env:
+        VERSION: ${{ inputs.version }}
+      with:
+        result-encoding: string
+        script: |
+          const { VERSION } = process.env;
+          const validate = require('semver/functions/valid');
+          const version = validate(VERSION);
+          if (!version) {
+            return core.setFailed(`Version ${VERSION} is not valid semver`);
+          }
+          return version
+    - uses: ietf-tools/semver-action@v1
+      if: steps.validate.outputs.result == ''
+      id: determine
+      with:
+        token: ${{ github.token }}
+        branch: ${{ env.BRANCH }}
+        fallbackTag: 0.0.0
+        noVersionBumpBehavior: patch
+    - uses: actions/github-script@v8
+      env:
+        VERSION: ${{ steps.validate.outputs.result || steps.determine.outputs.nextStrict }}
+      with:
+        script: |
+          const gt = require('semver/functions/gt');
+          const { VERSION } = process.env;
+          const { data: { tag_name: latest } } = await github.rest.repos.getLatestRelease({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+          });
+          if (latest && !gt(VERSION, latest.replace(/^v/, ''))) {
+            return core.setFailed(`Version ${VERSION} is not greater than latest release ${latest}`);
+          }
+          core.notice(`Releasing version ${VERSION}`);
+
+  release-notes:
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.version.outputs.number }}
+    outputs:
+      commit-id: ${{ steps.commit.output.id }}
+    needs: version
+    steps:
+    - uses: actions/checkout@v5
+    - run: cat CHANGELOG.md
+    - uses: actions/github-script@v8
+      with:
+        script: |
+          const { VERSION } = process.env;      
+          // Update content of CHANGELOG.md:
+          // [ ] If [Unreleased] section not found, fail the job
+          // [ ] If [VERSION] section already exists, fail the job
+          // [ ] If content of [Unreleased] section is empty, fail the job
+          // [ ] Rename [Unreleased] section to [VERSION] with date
+          // [ ] update reference link: [unreleased] to compare v{VERSION}...HEAD
+          // [ ] add reference link: [VERSION] to compare v{PREVIOUS_VERSION}...v{VERSION}
+          core.setFailed('Not implemented yet');
+
+    - run: cat CHANGELOG.md
+    # [ ] Commit CHANGELOG.md
+    # - id: commit
+    #   run: commit -a -m "chore(release): v$VERSION"
+    # [ ] Push commit to the branch
+    # - run: git push origin $BRANCH
+
+  git-tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: 
+    - version
+    - release-notes
+    steps:
+    - uses: actions/github-script@v8
+      env:
+        VERSION: ${{ needs.version.outputs.number }}
+        COMMIT_ID: ${{ needs.release-notes.outputs.commit-id }}
+      with:
+        script: |
+          const { VERSION, COMMIT_ID } = process.env;      
+          github.rest.git.createRef({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            ref: `refs/tags/v${VERSION}`,
+            sha: COMMIT_ID
+          })

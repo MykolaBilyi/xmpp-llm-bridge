@@ -1,20 +1,24 @@
-name: Build and Push Docker Image
+name: Release Artifacts
+run-name: Build Release ${{ github.ref_name }}
 
 on:
-  # push:
-  #   tags:
-  #     - "v*"
   release:
-    types: [published]
+    types: 
+    - published
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ghcr.io/${{ github.repository }}
+  # [ ] add other platforms when needed, e.g "linux/amd64,linux/arm64", otherwise build is slow
+  PLATFORMS: linux/amd64
 
 jobs:
-  build-and-push:
+  docker:
     runs-on: ubuntu-latest
     if: github.ref_name == 'main' || startsWith(github.ref, 'refs/tags/')
+    timeout-minutes: 30
+    concurrency:
+      group: docker
     permissions:
       contents: read
       packages: write
@@ -23,12 +27,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Container Registry
+      - name: Log in to container registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -39,26 +43,32 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.IMAGE_NAME }}
           tags: |
             type=ref,event=tag
+            type=semver,pattern=v{{version}}
+            type=semver,pattern=v{{major}}.{{minor}}
+            type=semver,pattern=v{{major}}            
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         id: build
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ env.PLATFORMS }}
           push: true
+          sbom: true
+          provenance: mode=max
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Generate artifact attestation
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@v2
         with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
+          subject-name: ${{ env.IMAGE_NAME}}
           subject-digest: ${{ steps.build.outputs.digest }}
-          push-to-registry: true
+          # [ ] enable when requested, otherwise github packages UI shows broken example
+          # push-to-registry: true
