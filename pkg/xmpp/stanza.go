@@ -10,6 +10,14 @@ func (s Stanza) IsMessage() bool {
 	return s.message != nil
 }
 
+func (s Stanza) IsPresence() bool {
+	return s.presence != nil
+}
+
+func (s Stanza) IsIQ() bool {
+	return s.iq != nil
+}
+
 func (s Stanza) Get() interface{} {
 	if s.IsMessage() {
 		return s.message

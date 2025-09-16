@@ -25,7 +25,7 @@ var _ ports.Logger = &Logger{}
 type ContextExtractor func(ctx context.Context) ports.Fields
 
 func init() {
-	zap.RegisterEncoder("logfmt", func(cfg zapcore.EncoderConfig) (zapcore.Encoder, error) {
+	_ = zap.RegisterEncoder("logfmt", func(cfg zapcore.EncoderConfig) (zapcore.Encoder, error) {
 		return zaplogfmt.NewEncoder(cfg), nil
 	})
 }
@@ -68,7 +68,9 @@ func NewLogger(config ports.Config) (*Logger, error) {
 		return nil, err
 	}
 
-	defer zapLogger.Sync()
+	defer func() {
+		_ = zapLogger.Sync()
+	}()
 
 	return &Logger{
 		LoggerFacade: zapadapter.New(zapLogger),

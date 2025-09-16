@@ -15,7 +15,7 @@ import (
 func main() {
 	ctx := context.Background()
 
-	appConfig, err := adapters.NewConfig(ctx)
+	appConfig, err := adapters.NewConfig()
 	if err != nil {
 		log.Printf("error reading config: %v\n", err)
 		os.Exit(1)

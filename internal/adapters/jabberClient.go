@@ -82,8 +82,8 @@ func (j *JabberClient) Connect(ctx context.Context) error {
 			j.server = err.(stream.Error).Content
 
 			logger.Info("see-other-host", ports.Fields{"host": j.server})
-			j.session.Close()
-			connection.Close()
+			_ = j.session.Close()
+			_ = connection.Close()
 			return j.Connect(ctx)
 		}
 		return fmt.Errorf("error establishing a session: %w", err)
@@ -96,7 +96,7 @@ func (j *JabberClient) Connect(ctx context.Context) error {
 func (j *JabberClient) Handle(ctx context.Context, handler myxmpp.Handler) error {
 	err := j.session.Send(ctx, stanza.Presence{Type: stanza.AvailablePresence}.Wrap(nil))
 	if err != nil {
-		return fmt.Errorf("Error sending initial presence: %w", err)
+		return fmt.Errorf("error sending initial presence: %w", err)
 	}
 
 	return j.session.Serve(myxmpp.HandleWithContext(ctx, handler))

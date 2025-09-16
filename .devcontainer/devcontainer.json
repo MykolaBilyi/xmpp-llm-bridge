@@ -9,7 +9,10 @@
     "ENV": "dev"
   },
   "postCreateCommand": "cd ${containerWorkspaceFolder}; /usr/bin/env sh .devcontainer/postCreateCommand.sh",
-  "features": {},
+  "features": {
+    // TODO add docker and docker-compose
+    // TODO add yamllint
+  },
   "customizations": {
     "vscode": {
       "settings": {

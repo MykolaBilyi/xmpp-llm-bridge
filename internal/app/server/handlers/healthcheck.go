@@ -10,6 +10,6 @@ func NewHealthCheck(loggerProvider *providers.LoggerProvider) http.Handler {
 		logger := loggerProvider.Value(r.Context())
 		logger.Debug("health check")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK\n"))
+		_, _ = w.Write([]byte("OK\n"))
 	})
 }

@@ -21,7 +21,7 @@ func HandleWithContext(ctx context.Context, handler Handler) xmpp.Handler {
 
 type ContextualHandler struct {
 	handler Handler
-	ctx     context.Context
+	ctx     context.Context //nolint:containedctx
 }
 
 func (c *ContextualHandler) HandleXMPP(t xmlstream.TokenReadEncoder, start *xml.StartElement) error {

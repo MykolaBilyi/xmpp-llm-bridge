@@ -2,6 +2,7 @@
   "recommendations": [
     "golang.go",
     "DavidAnson.vscode-markdownlint",
+    "fnando.linter",
     "Gruntfuggly.todo-tree",
   ]
 }
