@@ -31,7 +31,11 @@ func NewLlmForwardHandler(
 	}
 }
 
-func (h *LlmForwardHandler) HandleXMPP(ctx context.Context, t xmlstream.TokenReadEncoder, start *xml.StartElement) (bool, error) {
+func (h *LlmForwardHandler) HandleXMPP(
+	ctx context.Context,
+	t xmlstream.TokenReadEncoder,
+	start *xml.StartElement,
+) (bool, error) {
 	logger := h.loggerProvider.Value(ctx)
 
 	// TODO DRY decoding logic

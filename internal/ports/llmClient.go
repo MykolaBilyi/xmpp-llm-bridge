@@ -5,8 +5,13 @@ import (
 )
 
 type LLMService interface {
-	GetChatCompletion(ctx context.Context, req ChatCompletionRequest) (ChatCompletionResponse, error)
+	GetChatCompletion(
+		ctx context.Context,
+		req ChatCompletionRequest,
+	) (ChatCompletionResponse, error)
 }
 
-type ChatCompletionResponse string
-type ChatCompletionRequest string
+type (
+	ChatCompletionResponse string
+	ChatCompletionRequest  string
+)

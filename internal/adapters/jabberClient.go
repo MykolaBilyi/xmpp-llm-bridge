@@ -7,9 +7,9 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-
 	"xmpp-llm-bridge/internal/ports"
 	"xmpp-llm-bridge/internal/providers"
+
 	myxmpp "xmpp-llm-bridge/pkg/xmpp"
 
 	"mellium.im/sasl"
@@ -30,7 +30,11 @@ type JabberClient struct {
 
 var _ ports.XMPPSession = (*JabberClient)(nil)
 
-func NewJabberClient(ctx context.Context, config ports.Config, loggerProvider *providers.LoggerProvider) (*JabberClient, error) {
+func NewJabberClient(
+	ctx context.Context,
+	config ports.Config,
+	loggerProvider *providers.LoggerProvider,
+) (*JabberClient, error) {
 	config.SetDefault("connectionTimeout", "10s")
 	config.SetDefault("lang", "en")
 
@@ -57,7 +61,13 @@ func (j *JabberClient) streamConfig(*xmpp.Session, *xmpp.StreamConfig) xmpp.Stre
 				ServerName: j.server,
 				MinVersion: tls.VersionTLS12,
 			}),
-			xmpp.SASL("", j.config.GetString("password"), sasl.ScramSha1Plus, sasl.ScramSha1, sasl.Plain),
+			xmpp.SASL(
+				"",
+				j.config.GetString("password"),
+				sasl.ScramSha1Plus,
+				sasl.ScramSha1,
+				sasl.Plain,
+			),
 		},
 	}
 }
@@ -75,15 +85,22 @@ func (j *JabberClient) Connect(ctx context.Context) error {
 	}
 
 	logger.Debug("logging in", ports.Fields{"jid": j.jid.String()})
-	j.session, err = xmpp.NewSession(ctx, j.jid.Domain(), j.jid, connection, 0, xmpp.NewNegotiator(j.streamConfig))
+	j.session, err = xmpp.NewSession(
+		ctx,
+		j.jid.Domain(),
+		j.jid,
+		connection,
+		0,
+		xmpp.NewNegotiator(j.streamConfig),
+	)
 	dialCtxCancel()
 	if err != nil {
 		if errors.Is(err, stream.SeeOtherHost) {
 			j.server = err.(stream.Error).Content
 
 			logger.Info("see-other-host", ports.Fields{"host": j.server})
-			j.session.Close()
-			connection.Close()
+			_ = j.session.Close()
+			_ = connection.Close()
 			return j.Connect(ctx)
 		}
 		return fmt.Errorf("error establishing a session: %w", err)
@@ -96,7 +113,7 @@ func (j *JabberClient) Connect(ctx context.Context) error {
 func (j *JabberClient) Handle(ctx context.Context, handler myxmpp.Handler) error {
 	err := j.session.Send(ctx, stanza.Presence{Type: stanza.AvailablePresence}.Wrap(nil))
 	if err != nil {
-		return fmt.Errorf("Error sending initial presence: %w", err)
+		return fmt.Errorf("error sending initial presence: %w", err)
 	}
 
 	return j.session.Serve(myxmpp.HandleWithContext(ctx, handler))

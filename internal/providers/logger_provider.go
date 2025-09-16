@@ -2,7 +2,6 @@ package providers
 
 import (
 	"context"
-
 	"xmpp-llm-bridge/internal/ports"
 
 	"github.com/google/uuid"

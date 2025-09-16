@@ -2,7 +2,6 @@ package server
 
 import (
 	"net/http"
-
 	"xmpp-llm-bridge/internal/app/server/handlers"
 	"xmpp-llm-bridge/internal/ports"
 	"xmpp-llm-bridge/internal/providers"

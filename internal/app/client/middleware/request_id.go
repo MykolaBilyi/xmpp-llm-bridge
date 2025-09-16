@@ -19,7 +19,11 @@ type RequestIDMiddleware struct {
 	loggerProvider    *providers.LoggerProvider
 }
 
-func WithRequestID(handler xmpp.Handler, requestIdProvider *providers.RequestIdProvider, loggerProvider *providers.LoggerProvider) xmpp.Handler {
+func WithRequestID(
+	handler xmpp.Handler,
+	requestIdProvider *providers.RequestIdProvider,
+	loggerProvider *providers.LoggerProvider,
+) xmpp.Handler {
 	return &RequestIDMiddleware{
 		handler:           handler,
 		requestIdProvider: requestIdProvider,
@@ -27,7 +31,11 @@ func WithRequestID(handler xmpp.Handler, requestIdProvider *providers.RequestIdP
 	}
 }
 
-func (m *RequestIDMiddleware) HandleXMPP(ctx context.Context, t xmlstream.TokenReadEncoder, start *xml.StartElement) (bool, error) {
+func (m *RequestIDMiddleware) HandleXMPP(
+	ctx context.Context,
+	t xmlstream.TokenReadEncoder,
+	start *xml.StartElement,
+) (bool, error) {
 	requestId := findRequestID(start)
 
 	ctx = m.requestIdProvider.WithValue(ctx, requestId)

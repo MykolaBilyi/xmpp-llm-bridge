@@ -20,14 +20,21 @@ type EchoHandler struct {
 
 var _ xmpp.Handler = &EchoHandler{}
 
-func NewEchoHandler(loggerProvider *providers.LoggerProvider, session ports.XMPPSession) *EchoHandler {
+func NewEchoHandler(
+	loggerProvider *providers.LoggerProvider,
+	session ports.XMPPSession,
+) *EchoHandler {
 	return &EchoHandler{
 		loggerProvider: loggerProvider,
 		session:        session,
 	}
 }
 
-func (h *EchoHandler) HandleXMPP(ctx context.Context, t xmlstream.TokenReadEncoder, start *xml.StartElement) (bool, error) {
+func (h *EchoHandler) HandleXMPP(
+	ctx context.Context,
+	t xmlstream.TokenReadEncoder,
+	start *xml.StartElement,
+) (bool, error) {
 	logger := h.loggerProvider.Value(ctx)
 
 	// TODO DRY decoding logic

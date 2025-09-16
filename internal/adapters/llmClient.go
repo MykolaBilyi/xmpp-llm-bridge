@@ -17,7 +17,11 @@ type OpenAIClient struct {
 
 var _ ports.LLMService = &OpenAIClient{}
 
-func NewOpenAIClient(ctx context.Context, config ports.Config, loggerProvider *providers.LoggerProvider) (*OpenAIClient, error) {
+func NewOpenAIClient(
+	ctx context.Context,
+	config ports.Config,
+	loggerProvider *providers.LoggerProvider,
+) (*OpenAIClient, error) {
 	config.SetDefault("api.endpoint", "https://api.openai.com/v1")
 	config.SetDefault("api.model", "gpt-3.5-turbo")
 	config.SetDefault("maxTokens", 800)
@@ -36,7 +40,10 @@ func NewOpenAIClient(ctx context.Context, config ports.Config, loggerProvider *p
 	}, nil
 }
 
-func (c *OpenAIClient) GetChatCompletion(ctx context.Context, req ports.ChatCompletionRequest) (ports.ChatCompletionResponse, error) {
+func (c *OpenAIClient) GetChatCompletion(
+	ctx context.Context,
+	req ports.ChatCompletionRequest,
+) (ports.ChatCompletionResponse, error) {
 	logger := c.loggerProvider.Value(ctx)
 	params := openai.ChatCompletionNewParams{
 		Messages: []openai.ChatCompletionMessageParamUnion{

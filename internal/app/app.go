@@ -41,7 +41,12 @@ func NewApplication(ctx context.Context, config ports.Config) (*Application, err
 	}
 
 	httpHandler := server.NewRouter(config.Sub("http"), loggerProvider)
-	livecheckServer, err := adapters.NewWebServer(ctx, config.Sub("http"), loggerProvider, httpHandler)
+	livecheckServer, err := adapters.NewWebServer(
+		ctx,
+		config.Sub("http"),
+		loggerProvider,
+		httpHandler,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +65,13 @@ func (a *Application) Start(ctx context.Context) error {
 
 	loggerProvider := providers.NewLoggerProvider(a.logger)
 	requestIdProvider := providers.NewRequestIdProvider()
-	xmppHandler := client.NewHandler(a.config, loggerProvider, requestIdProvider, a.jabber, a.client)
+	xmppHandler := client.NewHandler(
+		a.config,
+		loggerProvider,
+		requestIdProvider,
+		a.jabber,
+		a.client,
+	)
 
 	go func() {
 		if err := a.jabber.Handle(ctx, xmppHandler); err != nil {
@@ -88,7 +99,10 @@ func (a *Application) Start(ctx context.Context) error {
 }
 
 func (a *Application) Stop(ctx context.Context) error {
-	gracefulCtx, cancelShutdown := context.WithTimeout(ctx, a.config.GetDuration("application.shutdownTimeout"))
+	gracefulCtx, cancelShutdown := context.WithTimeout(
+		ctx,
+		a.config.GetDuration("application.shutdownTimeout"),
+	)
 	defer cancelShutdown() // release resources afterwards
 
 	errChan := make(chan error, 2)

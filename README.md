@@ -1,21 +1,25 @@
 # XMPP LLM Bridge
 
-[![GitHub Release](https://img.shields.io/github/v/release/mykolabilyi/xmpp-llm-bridge)](https://github.com/mykolabilyi/xmpp-llm-bridge/releases) [![xc compatible](https://xcfile.dev/badge.svg)](https://xcfile.dev)
+[![GitHub Release](https://img.shields.io/github/v/release/mykolabilyi/xmpp-llm-bridge)](https://github.com/mykolabilyi/xmpp-llm-bridge/releases)
+[![xc compatible](https://xcfile.dev/badge.svg)](https://xcfile.dev)
 
 ## Description
 
-XMPP LLM Bridge is a Go service that connects XMPP chat networks with OpenAI's Large Language Models, enabling AI-powered conversations through XMPP clients. The service acts as an intelligent bot that can participate in XMPP conversations by processing incoming messages through OpenAI's API and responding with contextually relevant replies.
+XMPP LLM Bridge is a Go service that connects XMPP chat networks with OpenAI's Large Language Models,
+enabling AI-powered conversations through XMPP clients. The service acts as an intelligent bot that
+can participate in XMPP conversations by processing incoming messages through OpenAI's API and
+responding with contextually relevant replies.
 
 ### Key Features
 
-- **XMPP Integration**: Full XMPP client implementation using mellium.im/xmpp library with SASL authentication
+- **XMPP Integration**: Full XMPP client implementation using [mellium.im/xmpp] library with SASL authentication
 - **OpenAI LLM Integration**: Seamlessly forwards chat messages to OpenAI's API and returns responses
 - **Configurable**: YAML-based configuration with environment variable overrides
 - **Docker Ready**: Containerized deployment with multi-stage builds
 
 ## Usage
 
-The XMPP LLM Bridge can be deployed in several ways. All methods require three essential environment variables:
+The XMPP LLM Bridge can be deployed in several ways. All methods require next essential environment variables:
 
 - `XMPP_JID`: Your bot's XMPP account (e.g., `bot@example.com`)
 - `XMPP_PASSWORD`: Password for the XMPP account
@@ -80,11 +84,25 @@ The application runs two concurrent services:
 go run cmd/app/main.go
 ```
 
+### lint
+
+```sh
+golangci-lint run
+yamllint .
+echo "# FIXME Markdown linting is not automated yet, please use VSCode extension for that." && exit 1
+```
+
+### lint-fix
+
+```sh
+golangci-lint fmt
+```
+
 ### image-build
 
 run: once
-Inputs: TAG
-Environment: TAG=dev
+inputs: TAG
+env: TAG=dev
 
 ```sh
 docker compose build
@@ -92,11 +110,12 @@ docker compose build
 
 ### image-run
 
-Inputs: TAG
-Environment: TAG=dev
+inputs: TAG
+env: TAG=dev
 
 ```sh
 docker compose up
 ```
 
+[mellium.im/xmpp]: (https://pkg.go.dev/mellium.im/xmpp)
 [xc]: https://xcfile.dev/

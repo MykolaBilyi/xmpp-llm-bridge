@@ -21,7 +21,11 @@ func Message(typ stanza.MessageType, handler xmpp.Handler) xmpp.Handler {
 	}
 }
 
-func (m *messageHandler) HandleXMPP(ctx context.Context, t xmlstream.TokenReadEncoder, start *xml.StartElement) (bool, error) {
+func (m *messageHandler) HandleXMPP(
+	ctx context.Context,
+	t xmlstream.TokenReadEncoder,
+	start *xml.StartElement,
+) (bool, error) {
 	if start.Name.Local != "message" {
 		return false, nil // Not a message, skip
 	}

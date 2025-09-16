@@ -3,7 +3,6 @@ package providers_test
 import (
 	"context"
 	"testing"
-
 	"xmpp-llm-bridge/pkg/providers"
 
 	"github.com/stretchr/testify/assert"
@@ -23,8 +22,18 @@ func TestValueProvider_WhenWithValueCalled_ReturnsChildContext(t *testing.T) {
 
 	// Assert
 	assert.NotNilf(t, childContext, "child context should not be nil")
-	assert.NotEqualf(t, ctx, childContext, "child context should not be the same as the parent context")
-	assert.Equalf(t, childContext.Value(parentTestKey), parentTestValue, "parent value should be the same in the child context")
+	assert.NotEqualf(
+		t,
+		ctx,
+		childContext,
+		"child context should not be the same as the parent context",
+	)
+	assert.Equalf(
+		t,
+		childContext.Value(parentTestKey),
+		parentTestValue,
+		"parent value should be the same in the child context",
+	)
 }
 
 func TestValueProvider_WhenValueInContext_ReturnsTheValue(t *testing.T) {

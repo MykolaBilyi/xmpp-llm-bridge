@@ -2,20 +2,18 @@ package main
 
 import (
 	"context"
-	"syscall"
-
-	"xmpp-llm-bridge/internal/adapters"
-	"xmpp-llm-bridge/internal/app"
-
 	"log"
 	"os"
 	"os/signal"
+	"syscall"
+	"xmpp-llm-bridge/internal/adapters"
+	"xmpp-llm-bridge/internal/app"
 )
 
 func main() {
 	ctx := context.Background()
 
-	appConfig, err := adapters.NewConfig(ctx)
+	appConfig, err := adapters.NewConfig()
 	if err != nil {
 		log.Printf("error reading config: %v\n", err)
 		os.Exit(1)

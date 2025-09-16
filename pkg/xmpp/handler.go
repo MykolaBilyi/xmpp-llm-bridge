@@ -9,7 +9,11 @@ import (
 )
 
 type Handler interface {
-	HandleXMPP(ctx context.Context, t xmlstream.TokenReadEncoder, start *xml.StartElement) (bool, error)
+	HandleXMPP(
+		ctx context.Context,
+		t xmlstream.TokenReadEncoder,
+		start *xml.StartElement,
+	) (bool, error)
 }
 
 func HandleWithContext(ctx context.Context, handler Handler) xmpp.Handler {
@@ -21,10 +25,13 @@ func HandleWithContext(ctx context.Context, handler Handler) xmpp.Handler {
 
 type ContextualHandler struct {
 	handler Handler
-	ctx     context.Context
+	ctx     context.Context //nolint:containedctx
 }
 
-func (c *ContextualHandler) HandleXMPP(t xmlstream.TokenReadEncoder, start *xml.StartElement) error {
+func (c *ContextualHandler) HandleXMPP(
+	t xmlstream.TokenReadEncoder,
+	start *xml.StartElement,
+) error {
 	_, err := c.handler.HandleXMPP(c.ctx, t, start)
 	return err
 }

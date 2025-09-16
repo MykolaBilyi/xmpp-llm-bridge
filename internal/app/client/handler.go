@@ -21,7 +21,10 @@ func NewHandler(
 	muxHandler := mux.New(
 		stanza.NSClient,
 		// mux.Message(stanza.ChatMessage, handlers.NewEchoHandler(loggerProvider, session)),
-		mux.Message(stanza.ChatMessage, handlers.NewLlmForwardHandler(loggerProvider, session, llmService)),
+		mux.Message(
+			stanza.ChatMessage,
+			handlers.NewLlmForwardHandler(loggerProvider, session, llmService),
+		),
 		handlers.NewDebugHandler(loggerProvider),
 	)
 

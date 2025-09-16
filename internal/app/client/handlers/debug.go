@@ -44,7 +44,11 @@ func toString(tr xml.TokenReader) (string, error) {
 	return buf.String(), nil
 }
 
-func (h *DebugHandler) HandleXMPP(ctx context.Context, t xmlstream.TokenReadEncoder, start *xml.StartElement) (bool, error) {
+func (h *DebugHandler) HandleXMPP(
+	ctx context.Context,
+	t xmlstream.TokenReadEncoder,
+	start *xml.StartElement,
+) (bool, error) {
 	logger := h.loggerProvider.Value(ctx)
 	str, err := toString(xmlstream.MultiReader(xmlstream.Token(*start), t))
 	if err != nil {

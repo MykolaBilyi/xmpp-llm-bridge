@@ -4,7 +4,6 @@ import (
 	"context"
 	"net"
 	"net/http"
-
 	"xmpp-llm-bridge/internal/ports"
 	"xmpp-llm-bridge/internal/providers"
 )
@@ -17,7 +16,12 @@ type WebServer struct {
 
 var _ ports.Server = (*WebServer)(nil)
 
-func NewWebServer(ctx context.Context, config ports.Config, loggerProvider *providers.LoggerProvider, handler http.Handler) (*WebServer, error) {
+func NewWebServer(
+	ctx context.Context,
+	config ports.Config,
+	loggerProvider *providers.LoggerProvider,
+	handler http.Handler,
+) (*WebServer, error) {
 	config.SetDefault("listenAddr", ":8080")
 
 	return &WebServer{

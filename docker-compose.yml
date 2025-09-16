@@ -7,8 +7,8 @@ services:
       args:
         DOCKER_BUILDKIT: 1
     environment:
-      - XMPP_JID=${XMPP_JID:?}
-      - XMPP_PASSWORD=${XMPP_PASSWORD:?}
-      - OPENAI_API_KEY=${OPENAI_API_KEY:?}
+    - XMPP_JID=${XMPP_JID:?}
+    - XMPP_PASSWORD=${XMPP_PASSWORD:?}
+    - OPENAI_API_KEY=${OPENAI_API_KEY:?}
     ports:
-      - 8080:8080
+    - 8080:8080

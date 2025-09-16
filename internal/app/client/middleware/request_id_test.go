@@ -15,7 +15,11 @@ type MockHandler struct {
 	handleFunc func(ctx context.Context, t xmlstream.TokenReadEncoder, start *xml.StartElement) (bool, error)
 }
 
-func (m *MockHandler) HandleXMPP(ctx context.Context, t xmlstream.TokenReadEncoder, start *xml.StartElement) (bool, error) {
+func (m *MockHandler) HandleXMPP(
+	ctx context.Context,
+	t xmlstream.TokenReadEncoder,
+	start *xml.StartElement,
+) (bool, error) {
 	if m.handleFunc != nil {
 		return m.handleFunc(ctx, t, start)
 	}
@@ -45,7 +49,6 @@ func TestRequestIDMiddleware(t *testing.T) {
 	// Call the middleware
 	ctx := context.Background()
 	handled, err := middleware.HandleXMPP(ctx, nil, start)
-
 	// Verify the results
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)

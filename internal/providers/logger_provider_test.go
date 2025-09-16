@@ -3,7 +3,6 @@ package providers_test
 import (
 	"context"
 	"testing"
-
 	"xmpp-llm-bridge/internal/adapters"
 	"xmpp-llm-bridge/internal/providers"
 
@@ -25,8 +24,18 @@ func TestLoggerProvider_WhenWithLoggerCalled_ReturnsChildContext(t *testing.T) {
 
 	// Assert
 	assert.NotNil(t, childContext, "child context should not be nil")
-	assert.NotSame(t, ctx, childContext, "child context should not be the same as the parent context")
-	assert.Equal(t, childContext.Value(parentTestKey), parentTestValue, "child context contains same value as parent context")
+	assert.NotSame(
+		t,
+		ctx,
+		childContext,
+		"child context should not be the same as the parent context",
+	)
+	assert.Equal(
+		t,
+		childContext.Value(parentTestKey),
+		parentTestValue,
+		"child context contains same value as parent context",
+	)
 }
 
 func TestLoggerProvider_WhenLoggerInContext_ReturnsTheLogger(t *testing.T) {

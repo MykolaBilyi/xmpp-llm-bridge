@@ -20,7 +20,11 @@ func New(ns string, handlers ...xmpp.Handler) xmpp.Handler {
 	}
 }
 
-func (m *mux) HandleXMPP(ctx context.Context, t xmlstream.TokenReadEncoder, start *xml.StartElement) (bool, error) {
+func (m *mux) HandleXMPP(
+	ctx context.Context,
+	t xmlstream.TokenReadEncoder,
+	start *xml.StartElement,
+) (bool, error) {
 	if start.Name.Space != m.ns {
 		return false, nil // Not our namespace, skip
 	}
