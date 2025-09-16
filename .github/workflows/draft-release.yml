@@ -1,10 +1,10 @@
 name: Create Release Draft
 run-name: Draft Release ${{ inputs.version || github.ref_name }}
 
-on: 
+on:
   push:
     tags:
-      - "v*"
+    - "v*"
   workflow_dispatch:
     inputs:
       version:
@@ -21,7 +21,7 @@ jobs:
     steps:
     - uses: actions/setup-node@v5
       with:
-        node-version: '24' # github-script@v8 uses node 24
+        node-version: '24'  # github-script@v8 uses node 24
     - run: npm install semver
     - uses: actions/github-script@v8
       id: script
@@ -40,9 +40,13 @@ jobs:
             owner: context.repo.owner,
             repo: context.repo.repo,
           });
-          data.forEach(({ name, tag_name }) => name !== tag_name && core.warning(`Release name and tag mismatch: ${name} != ${tag_name}`))
+          data.forEach(
+            ({ name: n, tag_name: t }) => n !== t && core.warning(`Release name and tag mismatch: ${n} != ${t}`)
+          )
           // TODO check if version is greater than latest release
-          const releases = data.reduce((acc, { id, name, draft }) => Object.assign(acc, { [name.replace(/^v/, '')]: { id, name, draft } }), {});
+          const releases = data.reduce((acc, { id, name, draft }) => Object.assign(acc, {
+           [name.replace(/^v/, '')]: { id, name, draft }
+          }), {});
           if (releases[version]) {
             if (!releases[version].draft) {
               return core.setFailed(`Release ${version} already exists and is published`);
@@ -80,7 +84,9 @@ jobs:
             prerelease: false,
           }
           if (process.env.RELEASE_ID) {
-            await github.rest.repos.updateRelease(Object.assign(releaseInfo, { release_id: parseInt(process.env.RELEASE_ID, 10) }));
+            await github.rest.repos.updateRelease(Object.assign(releaseInfo, {
+              release_id: parseInt(process.env.RELEASE_ID, 10)
+            }));
             core.notice(`Updated existing draft release ${process.env.VERSION}`);
             return;
           }

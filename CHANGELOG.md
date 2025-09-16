@@ -6,12 +6,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- GitHub Actions workflow for code checks:
+  - golangci-lint
+  - Markdown Linter
+  - YAML Linter
+
 ## [0.1.3] - 2025-09-19
 
 ### Added
 
-- Github Actions workflow to create semver tags for release;
-- Github Actions workflow for automated release draft, uses CHANGELOG.md for release notes.
+- GitHub Actions workflow to create SemVer tags for release;
+- GitHub Actions workflow for automated release draft, uses CHANGELOG.md for release notes.
 
 ## [0.1.2] - 2025-08-29
 
@@ -51,7 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for loading secrets from files using `_FILE` suffix environment variables
 - Docker containerization with multi-stage builds
 - HTTP server with health check endpoint on port 8080
-- Development container configuration with VS Code devcontainer
+- Development container configuration with Visual Studio Code devcontainer
 - Basic project structure with hexagonal architecture foundations
 - GitHub Actions workflow for automated release builds and Docker image publishing
 
