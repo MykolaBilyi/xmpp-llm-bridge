@@ -17,8 +17,10 @@ updates:
   directory: "/"
   schedule:
     interval: weekly
+  commit-message:
+    prefix: "chore:"
   groups:
-    chore:
+    version:
       applies-to: version-updates
       update-types:
       - "minor"
@@ -29,6 +31,7 @@ updates:
       update-types:
       - "minor"
       - "patch"
+      # major updates will have their own PR
 - package-ecosystem: docker
   directory: "/"
   patterns: ["*"]
