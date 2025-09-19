@@ -3,9 +3,8 @@ package mux
 import (
 	"context"
 	"encoding/xml"
+	myxml "xmpp-llm-bridge/pkg/xml"
 	"xmpp-llm-bridge/pkg/xmpp"
-
-	"mellium.im/xmlstream"
 )
 
 type mux struct {
@@ -20,13 +19,22 @@ func New(ns string, handlers ...xmpp.Handler) xmpp.Handler {
 	}
 }
 
-func (m *mux) HandleXMPP(ctx context.Context, t xmlstream.TokenReadEncoder, start *xml.StartElement) (bool, error) {
+func (m *mux) HandleXMPP(ctx context.Context, t xml.TokenReader, w xmpp.StreamWriter) (bool, error) {
+	t, start, err := myxml.ExtractStartElement(t)
+	if err != nil {
+		return false, err
+	}
 	if start.Name.Space != m.ns {
 		return false, nil // Not our namespace, skip
 	}
 
 	for _, handler := range m.handlers {
-		h, err := handler.HandleXMPP(ctx, t, start)
+		tokens, copy, err := myxml.DuplicateReader(t)
+		if err != nil {
+			return false, err
+		}
+		t = tokens
+		h, err := handler.HandleXMPP(ctx, copy, w)
 		if err != nil {
 			return false, err
 		}

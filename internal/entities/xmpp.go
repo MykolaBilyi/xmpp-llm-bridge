@@ -6,8 +6,7 @@ import (
 	"mellium.im/xmpp/stanza"
 )
 
-// TODO fix entities
-
+// TODO rework
 type MessageBody struct {
 	stanza.Message
 	Subject   string          `xml:"subject,omitempty"`

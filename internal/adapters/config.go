@@ -27,6 +27,7 @@ func NewConfig(ctx context.Context) (*Config, error) {
 	config.SetConfigName("default")
 	config.AddConfigPath("./configs")
 	config.AddConfigPath(".")
+	config.AddConfigPath("../../configs")
 	config.AutomaticEnv()
 	config.SetEnvKeyReplacer(strings.NewReplacer(`.`, `_`))
 

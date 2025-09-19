@@ -9,35 +9,28 @@ import (
 	"xmpp-llm-bridge/internal/providers"
 	"xmpp-llm-bridge/pkg/xmpp"
 
-	"mellium.im/xmlstream"
 	"mellium.im/xmpp/stanza"
 )
 
 type EchoHandler struct {
 	loggerProvider *providers.LoggerProvider
-	session        ports.XMPPSession
 }
 
 var _ xmpp.Handler = &EchoHandler{}
 
-func NewEchoHandler(loggerProvider *providers.LoggerProvider, session ports.XMPPSession) *EchoHandler {
+func NewEchoHandler(loggerProvider *providers.LoggerProvider) *EchoHandler {
 	return &EchoHandler{
 		loggerProvider: loggerProvider,
-		session:        session,
 	}
 }
 
-func (h *EchoHandler) HandleXMPP(ctx context.Context, t xmlstream.TokenReadEncoder, start *xml.StartElement) (bool, error) {
+func (h *EchoHandler) HandleXMPP(ctx context.Context, t xml.TokenReader, w xmpp.StreamWriter) (bool, error) {
 	logger := h.loggerProvider.Value(ctx)
 
-	// TODO DRY decoding logic
-	d := xml.NewTokenDecoder(xmlstream.MultiReader(xmlstream.Token(*start), t))
-	if _, err := d.Token(); err != nil {
-		return false, err
-	}
+	d := xml.NewTokenDecoder(t)
 
 	msg := entities.MessageBody{}
-	err := d.DecodeElement(&msg, start)
+	err := d.Decode(&msg)
 	if err != nil && err != io.EOF {
 		logger.Error("error decoding message", ports.Fields{"error": err})
 		return false, err
@@ -58,5 +51,5 @@ func (h *EchoHandler) HandleXMPP(ctx context.Context, t xmlstream.TokenReadEncod
 
 	logger.Debug("echo", ports.Fields{"to": reply.To, "body": reply.Body})
 
-	return true, h.session.Send(ctx, xmpp.Message(reply))
+	return true, w.Write(xmpp.Message(reply))
 }

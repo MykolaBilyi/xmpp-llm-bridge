@@ -1,86 +1,88 @@
 package handlers
 
-import (
-	"context"
-	"encoding/xml"
-	"io"
-	"xmpp-llm-bridge/internal/entities"
-	"xmpp-llm-bridge/internal/ports"
-	"xmpp-llm-bridge/internal/providers"
-	"xmpp-llm-bridge/pkg/xmpp"
+// FIXME llm handler
 
-	"mellium.im/xmlstream"
-	"mellium.im/xmpp/stanza"
-)
+// import (
+// 	"context"
+// 	"encoding/xml"
+// 	"io"
+// 	"xmpp-llm-bridge/internal/entities"
+// 	"xmpp-llm-bridge/internal/ports"
+// 	"xmpp-llm-bridge/internal/providers"
+// 	"xmpp-llm-bridge/pkg/xmpp"
 
-type LlmForwardHandler struct {
-	loggerProvider *providers.LoggerProvider
-	session        ports.XMPPSession
-	llmService     ports.LLMService
-}
+// 	"mellium.im/xmlstream"
+// 	"mellium.im/xmpp/stanza"
+// )
 
-func NewLlmForwardHandler(
-	loggerProvider *providers.LoggerProvider,
-	session ports.XMPPSession,
-	llmService ports.LLMService,
-) xmpp.Handler {
-	return &LlmForwardHandler{
-		loggerProvider: loggerProvider,
-		session:        session,
-		llmService:     llmService,
-	}
-}
+// type LlmForwardHandler struct {
+// 	loggerProvider *providers.LoggerProvider
+// 	session        ports.XMPPSession
+// 	llmService     ports.LLMService
+// }
 
-func (h *LlmForwardHandler) HandleXMPP(ctx context.Context, t xmlstream.TokenReadEncoder, start *xml.StartElement) (bool, error) {
-	logger := h.loggerProvider.Value(ctx)
+// func NewLlmForwardHandler(
+// 	loggerProvider *providers.LoggerProvider,
+// 	session ports.XMPPSession,
+// 	llmService ports.LLMService,
+// ) xmpp.Handler {
+// 	return &LlmForwardHandler{
+// 		loggerProvider: loggerProvider,
+// 		session:        session,
+// 		llmService:     llmService,
+// 	}
+// }
 
-	// TODO DRY decoding logic
-	d := xml.NewTokenDecoder(xmlstream.MultiReader(xmlstream.Token(*start), t))
-	if _, err := d.Token(); err != nil {
-		return false, err
-	}
+// func (h *LlmForwardHandler) HandleXMPP(ctx context.Context, t xmlstream.TokenReadEncoder, start *xml.StartElement) (bool, error) {
+// 	logger := h.loggerProvider.Value(ctx)
 
-	msg := entities.MessageBody{}
-	err := d.DecodeElement(&msg, start)
-	if err != nil && err != io.EOF {
-		logger.Error("error decoding message", ports.Fields{"error": err})
-		return false, err
-	}
-	logger.Debug("incoming message", ports.Fields{"from": msg.From.String(), "body": msg.Body})
+// 	// TODO DRY decoding logic
+// 	d := xml.NewTokenDecoder(xmlstream.MultiReader(xmlstream.Token(*start), t))
+// 	if _, err := d.Token(); err != nil {
+// 		return false, err
+// 	}
 
-	if msg.Body == "" {
-		return false, nil
-	}
-	go h.askLLM(ctx, msg)
+// 	msg := entities.MessageBody{}
+// 	err := d.DecodeElement(&msg, start)
+// 	if err != nil && err != io.EOF {
+// 		logger.Error("error decoding message", ports.Fields{"error": err})
+// 		return false, err
+// 	}
+// 	logger.Debug("incoming message", ports.Fields{"from": msg.From.String(), "body": msg.Body})
 
-	return true, h.session.Send(ctx, xmpp.Message(entities.ComposingMessage{
-		Message: stanza.Message{
-			To: msg.From,
-		},
-	}))
-}
+// 	if msg.Body == "" {
+// 		return false, nil
+// 	}
+// 	go h.askLLM(ctx, msg)
 
-func (h *LlmForwardHandler) askLLM(ctx context.Context, msg entities.MessageBody) {
-	logger := h.loggerProvider.Value(ctx)
+// 	return true, h.session.Send(ctx, xmpp.Message(entities.ComposingMessage{
+// 		Message: stanza.Message{
+// 			To: msg.From,
+// 		},
+// 	}))
+// }
 
-	response, err := h.llmService.GetChatCompletion(ctx, ports.ChatCompletionRequest(msg.Body))
-	if err != nil {
-		logger.Error("error talking to llm", ports.Fields{"error": err})
-		return
-	}
+// func (h *LlmForwardHandler) askLLM(ctx context.Context, msg entities.MessageBody) {
+// 	logger := h.loggerProvider.Value(ctx)
 
-	reply := entities.MessageBody{
-		Message: stanza.Message{
-			Type: stanza.ChatMessage,
-			From: msg.To,
-			To:   msg.From.Bare(),
-		},
-		Body: string(response),
-	}
-	logger.Debug("llm reply", ports.Fields{"body": reply.Body})
+// 	response, err := h.llmService.GetChatCompletion(ctx, ports.ChatCompletionRequest(msg.Body))
+// 	if err != nil {
+// 		logger.Error("error talking to llm", ports.Fields{"error": err})
+// 		return
+// 	}
 
-	err = h.session.Send(ctx, xmpp.Message(reply))
-	if err != nil {
-		logger.Error("error sending reply", ports.Fields{"error": err})
-	}
-}
+// 	reply := entities.MessageBody{
+// 		Message: stanza.Message{
+// 			Type: stanza.ChatMessage,
+// 			From: msg.To,
+// 			To:   msg.From.Bare(),
+// 		},
+// 		Body: string(response),
+// 	}
+// 	logger.Debug("llm reply", ports.Fields{"body": reply.Body})
+
+// 	err = h.session.Send(ctx, xmpp.Message(reply))
+// 	if err != nil {
+// 		logger.Error("error sending reply", ports.Fields{"error": err})
+// 	}
+// }

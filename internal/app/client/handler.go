@@ -2,13 +2,13 @@ package client
 
 import (
 	"xmpp-llm-bridge/internal/app/client/handlers"
-	"xmpp-llm-bridge/internal/app/client/middleware"
 	"xmpp-llm-bridge/internal/ports"
 	"xmpp-llm-bridge/internal/providers"
 	"xmpp-llm-bridge/pkg/xmpp"
 	"xmpp-llm-bridge/pkg/xmpp/mux"
+	"xmpp-llm-bridge/pkg/xmpp/stanza"
 
-	"mellium.im/xmpp/stanza"
+	stnz "mellium.im/xmpp/stanza"
 )
 
 func NewHandler(
@@ -18,12 +18,17 @@ func NewHandler(
 	session ports.XMPPSession,
 	llmService ports.LLMService,
 ) xmpp.Handler {
+	// TODO add error handler middleware
+	// TODO add whitelist middleware
+	// TODO add rate limiting middleware
 	muxHandler := mux.New(
-		stanza.NSClient,
-		// mux.Message(stanza.ChatMessage, handlers.NewEchoHandler(loggerProvider, session)),
-		mux.Message(stanza.ChatMessage, handlers.NewLlmForwardHandler(loggerProvider, session, llmService)),
+		// FIXME use own constants for stanza types
+		stnz.NSClient,
+		mux.Message(stanza.ChatMessage, handlers.NewEchoHandler(loggerProvider)),
+		// mux.Message(stanza.ChatMessage, handlers.NewLlmForwardHandler(loggerProvider, session, llmService)),
 		handlers.NewDebugHandler(loggerProvider),
 	)
 
-	return middleware.WithRequestID(muxHandler, requestIdProvider, loggerProvider)
+	// return middleware.WithRequestID(muxHandler, requestIdProvider, loggerProvider)
+	return muxHandler
 }

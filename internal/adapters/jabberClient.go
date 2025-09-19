@@ -13,6 +13,7 @@ import (
 	myxmpp "xmpp-llm-bridge/pkg/xmpp"
 
 	"mellium.im/sasl"
+	"mellium.im/xmlstream"
 	"mellium.im/xmpp"
 	"mellium.im/xmpp/dial"
 	"mellium.im/xmpp/jid"
@@ -99,7 +100,7 @@ func (j *JabberClient) Handle(ctx context.Context, handler myxmpp.Handler) error
 		return fmt.Errorf("Error sending initial presence: %w", err)
 	}
 
-	return j.session.Serve(myxmpp.HandleWithContext(ctx, handler))
+	return j.session.Serve(j.handleWithContext(ctx, handler))
 }
 
 func (j *JabberClient) Send(ctx context.Context, s myxmpp.Stanza) error {
@@ -122,4 +123,33 @@ func (j *JabberClient) Close(ctx context.Context) error {
 		return nil
 	}
 	return j.session.Close()
+}
+
+// FIXME rework this part here i don't like
+func (j *JabberClient) handleWithContext(ctx context.Context, handler myxmpp.Handler) xmpp.Handler {
+	return &ContextualHandler{
+		handler:      handler,
+		ctx:          ctx,
+		streamWriter: writer{ctx, j.Send},
+	}
+}
+
+type writer struct {
+	ctx  context.Context
+	Send func(context.Context, myxmpp.Stanza) error
+}
+
+func (w writer) Write(c myxmpp.Stanza) error {
+	return w.Send(w.ctx, c)
+}
+
+type ContextualHandler struct {
+	handler      myxmpp.Handler
+	ctx          context.Context
+	streamWriter myxmpp.StreamWriter
+}
+
+func (c *ContextualHandler) HandleXMPP(t xmlstream.TokenReadEncoder, start *xml.StartElement) error {
+	_, err := c.handler.HandleXMPP(c.ctx, xmlstream.MultiReader(xmlstream.Token(*start), t), c.streamWriter)
+	return err
 }
