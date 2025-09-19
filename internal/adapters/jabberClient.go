@@ -96,7 +96,7 @@ func (j *JabberClient) Connect(ctx context.Context) error {
 func (j *JabberClient) Handle(ctx context.Context, handler myxmpp.Handler) error {
 	err := j.session.Send(ctx, stanza.Presence{Type: stanza.AvailablePresence}.Wrap(nil))
 	if err != nil {
-		return fmt.Errorf("Error sending initial presence: %w", err)
+		return fmt.Errorf("error sending initial presence: %w", err)
 	}
 
 	return j.session.Serve(myxmpp.HandleWithContext(ctx, handler))

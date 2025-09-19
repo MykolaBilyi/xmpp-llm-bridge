@@ -1,6 +1,6 @@
 name: Tag New Release
 
-on: 
+on:
   workflow_dispatch:
     inputs:
       # optional, will be determined from git history if not provided
@@ -57,7 +57,8 @@ jobs:
             repo: context.repo.repo,
           });
           if (latest && !gt(VERSION, latest.replace(/^v/, ''))) {
-            return core.setFailed(`Version ${VERSION} is not greater than latest release ${latest}`);
+            core.setFailed(`Version ${VERSION} is not greater than latest release ${latest}`);
+            return;
           }
           core.notice(`Releasing version ${VERSION}`);
           return VERSION
@@ -85,7 +86,9 @@ jobs:
           if (sectionHeaderRE(sectionLevel, VERSION).test(content)) {
             return core.setFailed(`CHANGELOG.md already contains section for version ${VERSION}`);
           }
-          const unreleasedSection = content.split(unreleasedHeaderRE)[unreleasedHeaderValue.length].split(sectionHeaderRE(sectionLevel))[0];
+          const unreleasedSection = content
+            .split(unreleasedHeaderRE)[unreleasedHeaderValue.length]
+              .split(sectionHeaderRE(sectionLevel))[0];
           if (!unreleasedSection.replace(/\s+/g, '')) {
             return core.setFailed('[Unreleased] section is empty, nothing to release');
           }
@@ -116,7 +119,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    needs: 
+    needs:
     - version
     - release-notes
     env:
@@ -152,7 +155,7 @@ jobs:
     - uses: actions/github-script@v8
       with:
         script: |
-          const { REF, VERSION: version } = process.env;      
+          const { REF, VERSION: version } = process.env;
           github.rest.actions.createWorkflowDispatch({
             owner: context.repo.owner,
             repo: context.repo.repo,
