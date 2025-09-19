@@ -7,7 +7,7 @@ RUN go get ./...
 RUN go build -o app ./cmd/app/main.go
 
 #final stage
-FROM alpine:latest
+FROM alpine:3
 RUN apk --no-cache add wget ca-certificates
 COPY --from=builder /go/src/xmpp-llm-bridge/app /app
 COPY --from=builder /go/src/xmpp-llm-bridge/configs/default.yml /default.yml

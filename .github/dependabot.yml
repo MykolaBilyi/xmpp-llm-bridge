@@ -1,7 +1,47 @@
 version: 2
-updates:
-  - package-ecosystem: "gomod"
-    directory: "/"
+
+multi-ecosystem-groups:
+  cicd:
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 4
+      interval: weekly
+    commit-message:
+      prefix: "chore:"
+  development:
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore:"
+
+updates:
+- package-ecosystem: gomod
+  directory: "/"
+  schedule:
+    interval: weekly
+  groups:
+    chore:
+      applies-to: version-updates
+      update-types:
+      - "minor"
+      - "patch"
+      # major updates will have their own PR
+    security:
+      applies-to: security-updates
+      update-types:
+      - "minor"
+      - "patch"
+- package-ecosystem: docker
+  directory: "/"
+  patterns: ["*"]
+  multi-ecosystem-group: cicd
+- package-ecosystem: github-actions
+  directory: "/"
+  patterns: ["*"]
+  multi-ecosystem-group: cicd
+- package-ecosystem: docker-compose
+  directory: "/"
+  patterns: ["*"]
+  multi-ecosystem-group: development
+- package-ecosystem: devcontainers
+  directory: "/"
+  patterns: ["*"]
+  multi-ecosystem-group: development
