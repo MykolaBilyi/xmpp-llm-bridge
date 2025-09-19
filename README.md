@@ -1,6 +1,7 @@
 # XMPP LLM Bridge
 
 [![GitHub Release](https://img.shields.io/github/v/release/mykolabilyi/xmpp-llm-bridge)](https://github.com/mykolabilyi/xmpp-llm-bridge/releases)
+[![Code Check](https://github.com/MykolaBilyi/xmpp-llm-bridge/actions/workflows/code-check.yml/badge.svg?branch=main)](https://github.com/MykolaBilyi/xmpp-llm-bridge/actions/workflows/code-check.yml)
 [![xc compatible](https://xcfile.dev/badge.svg)](https://xcfile.dev)
 
 ## Description
@@ -82,6 +83,12 @@ The application runs two concurrent services:
 
 ```sh
 go run cmd/app/main.go
+```
+
+### test
+
+```sh
+go test ./...
 ```
 
 ### lint
