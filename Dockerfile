@@ -1,5 +1,6 @@
+ARG GO_VERSION=1.23
 #build stage
-FROM golang:1.23-alpine AS builder
+FROM golang:${GO_VERSION}-alpine AS builder
 WORKDIR /go/src/xmpp-llm-bridge
 COPY . .
 RUN apk add --no-cache git
