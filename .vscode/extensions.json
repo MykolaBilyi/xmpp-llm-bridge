@@ -1,6 +1,7 @@
 {
   "recommendations": [
     "golang.go",
-    "DavidAnson.vscode-markdownlint"
+    "DavidAnson.vscode-markdownlint",
+    "Gruntfuggly.todo-tree",
   ]
 }
