@@ -18,7 +18,7 @@ jobs:
     outputs:
       number: ${{ steps.version.outputs.result }}
     steps:
-    - uses: actions/setup-node@v5
+    - uses: actions/setup-node@v6
     - run: npm install semver@v7
     - uses: actions/github-script@v8
       if: inputs.version != ''
