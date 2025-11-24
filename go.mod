@@ -6,12 +6,12 @@ toolchain go1.23.12
 
 require (
 	github.com/google/uuid v1.6.0
-	github.com/openai/openai-go/v2 v2.7.0
+	github.com/openai/openai-go/v2 v2.7.1
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	github.com/sykesm/zap-logfmt v0.0.4
 	go.uber.org/mock v0.6.0
-	go.uber.org/zap v1.27.0
+	go.uber.org/zap v1.27.1
 	logur.dev/adapter/zap v0.5.0
 	logur.dev/logur v0.17.0
 	mellium.im/sasl v0.3.2
