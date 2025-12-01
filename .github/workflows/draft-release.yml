@@ -61,7 +61,7 @@ jobs:
       contents: write
     needs: validate
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - run: echo > RELEASE_HEAD.md
     - uses: CSchoel/release-notes-from-changelog@v1
       with:

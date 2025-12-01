@@ -20,7 +20,7 @@ jobs:
       packages: read
       statuses: write
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
         persist-credentials: false
@@ -33,11 +33,11 @@ jobs:
     permissions:
       contents: read
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: actions/setup-go@v6
       with:
         go-version: ${{ env.GO_VERSION }}
-    - uses: golangci/golangci-lint-action@v8
+    - uses: golangci/golangci-lint-action@v9
       with:
         version: v2.1
   lint-markdown:
@@ -46,8 +46,8 @@ jobs:
     permissions:
       contents: read
     steps:
-    - uses: actions/checkout@v5
-    - uses: DavidAnson/markdownlint-cli2-action@v20
+    - uses: actions/checkout@v6
+    - uses: DavidAnson/markdownlint-cli2-action@v21
       with:
         globs: '**/*.md'
   lint-yaml:
@@ -56,14 +56,14 @@ jobs:
     permissions:
       contents: read
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - run: yamllint -f github .
   test:
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: actions/setup-go@v6
       with:
         go-version: ${{ env.GO_VERSION }}
